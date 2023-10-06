@@ -1,0 +1,39 @@
+version: '3.9'
+
+volumes:
+  etc_pihole-unbound:
+  etc_pihole_dnsmasq-unbound:
+
+services:
+  pihole-unbound:
+    image: rlabinc/pihole-unbound:latest
+    ports:
+      - 443:443/tcp
+      - 53:53/tcp
+      - 53:53/udp
+      - 8080:80/tcp #Allows use of different port to access pihole web interface when other docker containers use port 80
+      - 5335:5335/tcp # Uncomment to enable unbound access on local server
+    environment:
+      FTLCONF_LOCAL_IPV4: 192.168.1.5
+      TZ: Europe/Berlin
+      WEBPASSWORD: changeme
+      # <"default-dark"|"default-darker"|"default-light"|"default-auto"|"lcars">
+      WEBTHEME: default-dark
+      REV_SERVER: 'true'
+      REV_SERVER_TARGET: 192.168.1.1
+      REV_SERVER_DOMAIN: lan
+      REV_SERVER_CIDR: 192.168.1.0/24
+      PIHOLE_DNS_: 127.0.0.1#5335
+      CUSTOM_CACHE_SIZE: 0
+      DNSSEC: 'false'
+      DNSMASQ_LISTENING: local
+      DNS_BOGUS_PRIV: 'true'
+      DNS_FQDN_REQUIRED: 'true'
+      IPv6: 'false'
+    volumes:
+      - ./etc-pihole:/etc/pihole
+      - ./etc-dnsmasq.d:/etc/dnsmasq.d
+      - ./data/unbound.sh:/unbound.sh
+      # - etc_pihole-unbound:/etc/pihole:rw
+      # - etc_pihole_dnsmasq-unbound:/etc/dnsmasq.d:rw
+    restart: unless-stopped

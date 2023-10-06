@@ -60,6 +60,9 @@ server:
     # Set the working directory for the program.
     directory: "/opt/unbound/etc/unbound"
 
+    # where to find root server data
+    root-hints: /usr/share/dns/root.hints
+
     # RFC 6891. Number  of bytes size to advertise as the EDNS reassembly buffer
     # size. This is the value put into  datagrams over UDP towards peers.
     # The actual buffer size is determined by msg-buffer-size (both for TCP and
@@ -144,6 +147,7 @@ server:
     # Only give access to recursion clients from LAN IPs
     access-control: 127.0.0.1/32 allow
     access-control: 192.168.0.0/16 allow
+    access-control: 192.168.1.0/16 allow
     access-control: 172.16.0.0/12 allow
     access-control: 10.0.0.0/8 allow
     # access-control: fc00::/7 allow
@@ -151,7 +155,7 @@ server:
 
     # File with trust anchor for  one  zone, which is tracked with RFC5011
     # probes.
-    auto-trust-anchor-file: "var/root.key"
+    auto-trust-anchor-file: "/opt/unbound/etc/unbound/var/root.key"
 
     # Enable chroot (i.e, change apparent root directory for the current
     # running process and its children)
@@ -216,6 +220,7 @@ server:
     private-address: 10.0.0.0/8
     private-address: 172.16.0.0/12
     private-address: 192.168.0.0/16
+    private-address: 192.168.1.0/16
     private-address: 169.254.0.0/16
     # private-address: fd00::/8
     # private-address: fe80::/10
@@ -351,7 +356,6 @@ server:
     ###########################################################################
 
     #include: /opt/unbound/etc/unbound/forward-records.conf
-
 
 remote-control:
     control-enable: no
