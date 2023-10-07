@@ -1,5 +1,5 @@
 # Define an ARG for the base image tag
-ARG BASE_IMG_TAG=none
+ARG BASE_IMG_TAG
 
 FROM pihole/pihole:${BASE_IMG_TAG} as openssl
 
@@ -82,7 +82,7 @@ WORKDIR /tmp/src
 COPY --from=unbound /opt /opt
 
 RUN set -x && \
-    DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
+    DEBIAN_FRONTEND=noninteractive apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
       bsdmainutils \
       ca-certificates \
       ldnsutils \
