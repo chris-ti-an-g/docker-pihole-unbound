@@ -7,11 +7,11 @@ volumes:
 services:
   pihole-unbound:
     #image: rlabinc/pihole-unbound:local
-    image: rlabinc/pihole-unbound:latest
+    image: rlabinc/pihole-unbound:20231122
     build:
       context: .
       args:
-        BASE_IMG_TAG: 2023.05.2
+        BASE_IMG_TAG: 2023.11.0
     ports:
 #      - 443:443/tcp
       - 53:53/tcp

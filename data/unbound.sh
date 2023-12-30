@@ -60,6 +60,19 @@ server:
     # Set the working directory for the program.
     directory: "/opt/unbound/etc/unbound"
 
+    # If enabled, Unbound will respond with Extended DNS Error codes (RFC 8914).
+    # These EDEs attach informative error messages to a response for various
+    # errors.
+    # When the val-log-level: option is also set to 2, responses with Extended
+    # DNS Errors concerning DNSSEC failures that are not served from cache, will
+    # also contain a descriptive text message about the reason for the failure.
+    ede: yes
+
+    # If enabled, Unbound will attach an Extended DNS Error (RFC 8914)
+    # Code 3 - Stale Answer as EDNS0 option to the expired response.
+    # This will not attach the EDE code without setting ede: yes as well.
+    ede-serve-expired: yes
+
     # RFC 6891. Number  of bytes size to advertise as the EDNS reassembly buffer
     # size. This is the value put into  datagrams over UDP towards peers.
     # The actual buffer size is determined by msg-buffer-size (both for TCP and
@@ -74,6 +87,9 @@ server:
     # Listen to for queries from clients and answer from this network interface
     # and port.
     interface: 0.0.0.0@5335
+
+    do-ip6: yes
+    #prefer-ip6: yes
 
     # Rotates RRSet order in response (the pseudo-random number is taken from
     # the query ID, for speed and thread safety).
@@ -98,10 +114,21 @@ server:
     # Do not print log lines that say why queries return SERVFAIL to clients
     log-servfail: no
 
-    # Further limit logging
-    logfile: /dev/null
+    # If you want to log to a file, use:
+    # logfile: /opt/unbound/etc/unbound/unbound.log
+    # Set log location (using /dev/null further limits logging)
+    #logfile: /dev/null
+    logfile: /var/log/unbound.log
 
+    #log-queries: yes
     # Only log errors
+    # Set logging level
+    # Level 0: No verbosity, only errors.
+    # Level 1: Gives operational information.
+    # Level 2: Gives detailed operational information including short information per query.
+    # Level 3: Gives query level information, output per query.
+    # Level 4:  Gives algorithm level information.
+    # Level 5: Logs client identification for cache misses.
     verbosity: 0
 
     ###########################################################################
@@ -165,6 +192,12 @@ server:
     # Harden against algorithm downgrade when multiple algorithms are
     # advertised in the DS record.
     harden-algo-downgrade: yes
+
+    # Harden against unknown records in the authority section and additional
+    # section. If no, such records are copied from the upstream and presented
+    # to the client together with the answer. If yes, it could hamper future
+    # protocol developments that want to add records.
+    harden-unknown-additional: yes
 
     # RFC 8020. returns nxdomain to queries for a name below another name that
     # is already known to be nxdomain.
@@ -336,6 +369,14 @@ server:
     # actual resolution answer ends up in the cache later on.
     serve-expired: yes
 
+    # UDP queries that have waited in the socket buffer for a long time can be
+    # dropped. The time is set in seconds, 3 could be a good value to ignore old
+    # queries that likely the client does not need a reply for any more. This 
+    # could happen if the host has not been able to service the queries for a 
+    # while, i.e. Unbound is not running, and then is enabled again. It uses 
+    # timestamp socket options.
+    sock-queue-timeout: 3
+
     # Open dedicated listening sockets for incoming queries for each thread and
     # try to set the SO_REUSEPORT socket option on each socket. May distribute
     # incoming queries to threads more evenly.
@@ -355,6 +396,7 @@ server:
 
     #include: /opt/unbound/etc/unbound/forward-records.conf
 
+
 remote-control:
     control-enable: no
 EOT
@@ -366,6 +408,8 @@ cp -a /dev/random /dev/urandom /dev/null /opt/unbound/etc/unbound/dev/
 mkdir -p -m 700 /opt/unbound/etc/unbound/var && \
 chown _unbound:_unbound /opt/unbound/etc/unbound/var && \
 /opt/unbound/sbin/unbound-anchor -a /opt/unbound/etc/unbound/var/root.key
-curl https://www.internic.net/domain/named.root -q -o /usr/share/dns/root.hints
+INTERNIC="192.0.43.9"
+#INTERNIC=$(host internic.net | grep address | grep -v : | cut -d" " -f4)
+curl --resolve www.internic.net:443:$INTERNIC https://www.internic.net/domain/named.root -q -o /usr/share/dns/root.hints
 
 exec /opt/unbound/sbin/unbound -d -c /opt/unbound/etc/unbound/unbound.conf
