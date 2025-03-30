@@ -27,10 +27,15 @@ RUN set -e -x && \
     rm -rf \
         /tmp/* \
         /var/tmp/* \
+        /var/cache/apt/* \
         /var/lib/apt/lists/*
 
 
 FROM pihole/pihole:${BASE_IMG_TAG} as unbound
+
+ENV NAME=unbound \
+    UNBOUND_VERSION=latest \
+    UNBOUND_DOWNLOAD_URL=https://nlnetlabs.nl/downloads/unbound/unbound-latest.tar.gz
 
 WORKDIR /tmp/src
 
@@ -47,7 +52,10 @@ RUN build_deps="curl gcc libc-dev libevent-dev libexpat1-dev libnghttp2-dev make
       libexpat1 \
       libprotobuf-c-dev \
       protobuf-c-compiler && \
-    git clone https://github.com/NLnetLabs/unbound.git && \
+    curl -sSL $UNBOUND_DOWNLOAD_URL -o unbound.tar.gz && \
+    tar xzf unbound.tar.gz && \
+    rm -f unbound.tar.gz && \
+    mv unbound-* unbound && \
     cd unbound && \
     groupadd _unbound && \
     useradd -g _unbound -s /dev/null -d /etc _unbound && \
@@ -72,6 +80,7 @@ RUN build_deps="curl gcc libc-dev libevent-dev libexpat1-dev libnghttp2-dev make
         /opt/unbound/share/man \
         /tmp/* \
         /var/tmp/* \
+        /var/cache/apt/* \
         /var/lib/apt/lists/*
 
 
@@ -98,6 +107,7 @@ RUN set -x && \
         /opt/unbound/share/man \
         /tmp/* \
         /var/tmp/* \
+        /var/cache/apt/* \
         /var/lib/apt/lists/*
 
 WORKDIR /opt/unbound/
